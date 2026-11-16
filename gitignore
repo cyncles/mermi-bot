@@ -1,0 +1,5 @@
+.env
+stats.json
+data.js
+*.tmp
+__pycache__/
