@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERMİSIKICILAR • Community Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--bg:#080b10;--panel:#101720;--panel2:#151f2a;--line:rgba(255,255,255,.09);--muted:#8d9aa6;--red:#e13b42;--cyan:#62d7d1;--white:#f3f5f6;--heart:#ff4d6d;--gold:#e8c56b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,Arial,sans-serif;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 78% 0%,rgba(31,111,122,.18),transparent 36%),radial-gradient(ellipse at 0% 65%,rgba(194,38,48,.11),transparent 32%);z-index:-1}
+button{font:inherit;cursor:pointer}select{font:inherit}
+.shell{max-width:1500px;margin:auto;padding:0 34px}
+
+/* Ship sayfaları arka planı */
+.shipbg{position:fixed;inset:0;z-index:-2;opacity:0;transition:opacity .5s;overflow:hidden;pointer-events:none}
+.shipbg:before{content:"";position:absolute;inset:-20px;background:url(ship-bg.jpg) center/cover no-repeat;filter:blur(2.5px) saturate(1.15)}
+.shipbg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,16,.55) 0%,rgba(8,11,16,.35) 40%,rgba(8,11,16,.82) 100%)}
+body[data-page="ship"] .shipbg,body[data-page="shipgame"] .shipbg{opacity:1}
+body[data-page="ship"] .panel,body[data-page="shipgame"] .panel{background:rgba(12,16,24,.78);backdrop-filter:blur(8px)}
+
+/* Üst bar */
+.topbar{height:78px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:relative;z-index:5;gap:14px}
+.brand{display:flex;align-items:center;gap:12px;font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;font-weight:900;font-size:25px;letter-spacing:2px;white-space:nowrap}
+.brand-mark{width:36px;height:36px;background:var(--red);display:grid;place-items:center;clip-path:polygon(0 0,100% 0,85% 100%,0 85%);font-size:18px}
+.nav{display:flex;align-items:center;gap:6px}
+.nav button{border:0;color:#aab4be;background:transparent;padding:12px 16px;font-size:12px;font-weight:800;letter-spacing:1.2px;transition:.2s}
+.nav button:hover,.nav button.active{color:#fff;background:rgba(255,255,255,.07)}
+.nav button.active{box-shadow:inset 0 -2px var(--red)}
+.pill{border:1px solid rgba(98,215,209,.35);background:rgba(98,215,209,.09);color:var(--cyan);padding:10px 14px;font-size:10px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+.pill.demo{border-color:rgba(232,197,107,.45);background:rgba(232,197,107,.1);color:var(--gold)}
+
+/* Günün ship şeridi */
+.daily{margin-top:16px;border:1px solid rgba(255,77,109,.35);background:linear-gradient(90deg,rgba(255,77,109,.16),rgba(225,59,66,.07) 50%,rgba(255,77,109,.16));display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;position:relative;overflow:hidden}
+.daily .lbl{font-size:10px;letter-spacing:2.5px;font-weight:800;color:#ff9fb2;line-height:1.5}
+.daily .lbl b{display:block;font:900 22px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:1.5px;color:#fff}
+.daily .duo{display:flex;align-items:center;gap:16px;min-width:0}
+.daily .who{display:flex;align-items:center;gap:10px;min-width:0}
+.daily .who b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.daily .who small{display:block;color:var(--muted);font-size:10px}
+.daily .pct{font:900 26px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;color:var(--heart);letter-spacing:1px}
+.daily .more{background:var(--heart);border:0;color:#fff;padding:10px 14px;font-size:10px;font-weight:900;letter-spacing:1.2px;white-space:nowrap}
+.heart{color:var(--heart);font-size:30px;line-height:1;filter:drop-shadow(0 0 10px rgba(255,77,109,.7));animation:beat 1.3s infinite;display:inline-block}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.18)}}
+
+/* Avatar */
+.avatar{border-radius:50%;flex:none;background:linear-gradient(135deg,#38515b,#1d2933);display:inline-grid;place-items:center;font-weight:800;border:2px solid rgba(255,255,255,.2);overflow:hidden;color:#dfe9ee}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Sayfalar */
+.page{display:none}.page.active{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Hero */
+.hero{height:360px;margin:20px 0 24px;position:relative;overflow:hidden;border:1px solid var(--line);background:#142b30}
+.hero img{width:100%;height:100%;object-fit:cover;object-position:center 43%;filter:brightness(.56) saturate(.9)}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,9,13,.92) 0%,rgba(5,9,13,.54) 48%,rgba(5,9,13,.08) 100%),linear-gradient(0deg,rgba(5,9,13,.7),transparent 55%)}
+.hero-copy{position:absolute;z-index:1;left:42px;bottom:35px;max-width:560px}
+.eyebrow{color:var(--cyan);font-size:10px;letter-spacing:3px;font-weight:800}
+.hero h1{font:900 clamp(40px,6vw,76px)/.9 'Barlow Condensed','Arial Narrow',Impact,sans-serif,'Arial Narrow',Impact,sans-serif;letter-spacing:1px;margin:13px 0 12px;text-transform:uppercase}
+.hero h1 span{color:var(--red)}
+.hero p{color:#c0c8ce;font-size:13px;line-height:1.7;max-width:430px;margin:0 0 18px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.primary,.secondary{padding:12px 18px;border:0;font-size:11px;font-weight:900;letter-spacing:1.3px;color:#fff}
+.primary{background:var(--red)}.secondary{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
+
+.section-head{display:flex;align-items:end;justify-content:space-between;margin:28px 0 13px;gap:12px}
+.section-head h2{font:800 26px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:1.5px;margin:0}
+.section-head p{font-size:10px;color:var(--muted);margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:linear-gradient(135deg,#141e28,#0e141c);border:1px solid var(--line);padding:17px 18px;position:relative;overflow:hidden;min-width:0}
+.stat:after{content:"";position:absolute;width:3px;top:0;bottom:0;left:0;background:var(--red)}
+.stat small{display:block;color:var(--muted);font-size:10px;letter-spacing:1.6px;font-weight:800}
+.stat strong{display:block;font:800 30px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;margin:7px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat em{font-style:normal;color:var(--cyan);font-size:10px}
+
+.content{align-items:start;display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.85fr);gap:14px;margin-top:14px}
+.panel{background:rgba(16,23,32,.92);border:1px solid var(--line);min-width:0}
+.panel-head{padding:17px 19px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.panel-head h3{font:800 21px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:1.2px;margin:0}
+.tabs{display:flex;gap:5px;flex-wrap:wrap}
+.tabs button{background:transparent;border:1px solid var(--line);color:var(--muted);font-size:10px;font-weight:800;letter-spacing:1px;padding:8px 12px}
+.tabs button.active{background:var(--red);border-color:var(--red);color:#fff}
+.leader{padding:0 18px}
+.leader-row{display:grid;grid-template-columns:32px minmax(0,1fr) 110px 84px;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.055)}
+.leader-row:last-child{border:0}
+.rank{font:800 22px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;color:#596571}.rank.gold{color:var(--gold)}.rank.silver{color:#c4ccd3}.rank.bronze{color:#cd8b5a}
+.user{display:flex;align-items:center;gap:11px;min-width:0}
+.user b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user small{font-size:10px;color:var(--muted)}
+.bar{height:5px;background:#25313c;border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),#f17b67);border-radius:9px}
+.score{text-align:right;font:700 18px 'Barlow Condensed','Arial Narrow',Impact,sans-serif}
+.score small{display:block;color:var(--muted);font:10px Inter}
+.panel-foot{padding:14px 18px;border-top:1px solid var(--line);text-align:center}
+.linkbtn{background:transparent;border:1px solid var(--line);color:#fff;padding:10px 18px;font-size:10px;font-weight:900;letter-spacing:1.3px}
+.linkbtn:hover{background:rgba(255,255,255,.07)}
+.empty{padding:30px 10px;text-align:center;color:var(--muted);font-size:13px}
+
+.side-stack{display:grid;gap:14px;align-content:start}
+.rank-list{padding:6px 17px 13px}
+.rank-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.rank-item:last-child{border:0}
+.rank-item .em{font-size:20px;width:28px;text-align:center}
+.rank-item b{font-size:12px;display:block}.rank-item small{font-size:10px;color:var(--muted)}
+.rank-note{padding:0 17px 15px;font-size:10px;color:var(--muted);line-height:1.6}
+.shipbox{background:linear-gradient(135deg,#35181e,#17141b 65%);border:1px solid rgba(225,59,66,.35);padding:19px;position:relative;overflow:hidden}
+.shipbox:after{content:"♡";position:absolute;right:14px;top:-22px;font-size:105px;color:rgba(255,255,255,.055);font-family:Arial}
+.shipbox h3{font:900 30px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:2px;margin:0 0 5px}
+.shipbox p{font-size:12px;color:#c2aeb0;line-height:1.6;max-width:270px;margin:0 0 15px}
+.shipbox button{background:var(--red);color:#fff;border:0;padding:11px 16px;font-size:10px;font-weight:900;letter-spacing:1px}
+
+/* Ship sayfaları */
+.shiphead{text-align:center;margin:34px 0 22px}
+.shiphead h2{font:900 clamp(38px,6vw,64px)/1 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:3px;margin:8px 0;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+.shiphead h2 span{color:var(--heart)}
+.shiphead p{color:#d5cdd0;font-size:13px;max-width:520px;margin:0 auto;line-height:1.7;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.shipwrap{display:grid;gap:14px;max-width:900px;margin:0 auto}
+.shipcard{padding:26px 22px 28px;text-align:center}
+.shipcard .tag{font-size:10px;letter-spacing:3px;font-weight:800;color:#ff9fb2}
+.pairrow{display:flex;align-items:center;justify-content:center;gap:clamp(10px,4vw,38px);margin:20px 0 6px}
+.profile{display:flex;flex-direction:column;align-items:center;gap:8px;width:170px;min-width:0}
+.profile .avatar{border:3px solid rgba(255,255,255,.28);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.profile b{font-size:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:10px;font-weight:800;letter-spacing:.8px;color:#ffc2cf;background:rgba(255,77,109,.14);border:1px solid rgba(255,77,109,.3);padding:4px 9px}
+.profile small{color:var(--muted);font-size:11px}
+.bigheart{font-size:clamp(46px,9vw,76px)}
+.bigpct{font:900 clamp(54px,10vw,92px)/1 'Barlow Condensed','Arial Narrow',Impact,sans-serif;color:var(--heart);margin-top:6px;text-shadow:0 0 30px rgba(255,77,109,.4)}
+.meter{height:12px;background:rgba(255,255,255,.1);border-radius:20px;overflow:hidden;max-width:460px;margin:10px auto}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--heart),#ffb3c1);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.shipname{font:800 24px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:1.5px;color:var(--gold);margin-top:8px}
+.story{margin:18px auto 0;max-width:620px;text-align:left;background:rgba(255,255,255,.05);border:1px solid var(--line);padding:6px 18px}
+.story p{margin:0;padding:11px 0;font-size:14px;line-height:1.6;border-bottom:1px solid rgba(255,255,255,.06);animation:fade .5s both}
+.story p:last-child{border:0;color:#ffd0da;font-weight:600}
+.spinning .avatar{filter:blur(1.2px)}
+.spinning .profile b{opacity:.7}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.rollbtn{background:linear-gradient(90deg,var(--red),var(--heart));border:0;color:#fff;padding:16px 34px;font:900 20px 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:2px;box-shadow:0 8px 30px rgba(255,77,109,.35)}
+.rollbtn:disabled{opacity:.6;cursor:wait}
+.picker{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.picker select{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--line);padding:11px 12px;min-width:170px;max-width:100%}
+.picker select option{background:#141e28;color:#fff}
+.picker .mid{color:var(--heart);font-size:22px}
+.history{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.history span{font-size:11px;background:rgba(255,255,255,.07);border:1px solid var(--line);padding:6px 10px;color:#d7dde2}
+.history span b{color:var(--heart);margin-left:5px}
+
+.footer{border-top:1px solid var(--line);margin-top:34px;padding:20px 0 28px;display:flex;justify-content:space-between;color:#687580;font-size:10px;letter-spacing:1px;gap:12px;flex-wrap:wrap}
+.toast{position:fixed;right:24px;bottom:24px;background:#18242e;border:1px solid rgba(98,215,209,.35);padding:13px 17px;color:#dff;font-size:12px;opacity:0;transform:translateY(10px);transition:.25s;z-index:10}.toast.show{opacity:1;transform:none}
+
+@media(max-width:900px){
+  .shell{padding:0 16px}
+  .content{grid-template-columns:1fr}
+  .hero{height:330px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .nav button{padding:10px 9px;font-size:10px}
+  .pill{display:none}
+}
+@media(max-width:620px){
+  .topbar{height:auto;flex-wrap:wrap;padding:12px 0;gap:8px}
+  .nav{order:3;width:100%;justify-content:space-between}.nav button{flex:1;padding:10px 4px;font-size:10px;letter-spacing:.6px}
+  .daily{flex-direction:column;align-items:stretch;text-align:center;padding:14px}
+  .daily .duo{justify-content:center;flex-wrap:wrap}
+  .daily .who b{max-width:110px}
+  .hero{height:350px;margin-top:14px}.hero-copy{left:20px;right:15px;bottom:23px}.hero h1{font-size:46px}
+  .stats{gap:8px}.stat{padding:13px}.stat strong{font-size:24px}
+  .leader-row{grid-template-columns:26px minmax(0,1fr) 78px}.leader-row .bar{display:none}.score{font-size:15px}
+  .profile{width:112px}.profile .avatar{width:84px!important;height:84px!important;font-size:30px!important}
+  .profile b{font-size:13px}
+  .section-head h2{font-size:23px}
+  .footer{flex-direction:column}
+}
+</style>
+</head>
+<body data-page="home">
+<div class="shipbg"></div>
+<div class="shell">
+
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">弾</div><span>MERMİ<span style="color:var(--red)">SIKICILAR</span></span></div>
+  <nav class="nav">
+    <button data-page="home" class="active">ANA SAYFA</button>
+    <button data-page="leaderboard">LEADERBOARD</button>
+    <button data-page="ship">SHIP</button>
+    <button data-page="shipgame">SHIPGAME</button>
+  </nav>
+  <div class="pill" id="statusPill">◉ &nbsp;BAĞLANIYOR</div>
+</header>
+
+<!-- GÜNÜN SHIP'İ (en üstte, her sayfada) -->
+<div class="daily" id="daily"></div>
+
+<main>
+  <!-- ANA SAYFA -->
+  <div class="page active" id="page-home">
+    <section class="hero">
+      <img src="hero.jpg" alt="">
+      <div class="hero-copy">
+        <div class="eyebrow">WELCOME TO THE GANG • EST. 2026</div>
+        <h1>YOUR CREW.<br><span>YOUR STORY.</span></h1>
+        <p>Ekibini bul, ses kanallarında vakit geçir, sohbetlerde iz bırak. Bu sokaklarda herkesin bir hikâyesi var.</p>
+        <div class="hero-actions"><button class="primary" data-go="leaderboard">LİDERLİK TABLOSU ↗</button><button class="secondary" data-go="shipgame">SHIPGAME ♡</button></div>
+      </div>
+    </section>
+
+    <div class="section-head"><div><div class="eyebrow">SERVER OVERVIEW</div><h2>TOPLULUK DURUMU</h2></div><p id="overviewNote"></p></div>
+    <section class="stats" id="stats"></section>
+
+    <div class="content">
+      <section class="panel">
+        <div class="panel-head"><h3>🏆 ZİRVEDEKİ İLK 3</h3><div class="tabs" id="homeTabs"></div></div>
+        <div class="leader" id="homeRows"></div>
+        <div class="panel-foot"><button class="linkbtn" data-go="leaderboard">TÜM SIRALAMAYI GÖR →</button></div>
+      </section>
+      <aside class="side-stack">
+        <section class="shipbox">
+          <div class="eyebrow">FIND YOUR MATCH</div><h3>SHIPGAME ♡</h3>
+          <p>Sunucudaki iki kişiyi kadere bırak, uyumlarını ve hikâyelerini keşfet.</p>
+          <button data-go="shipgame">OYUNA KATIL &nbsp;↗</button>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h3>🎖️ RANK'LAR</h3></div>
+          <div class="rank-list" id="rankList"></div>
+          <div class="rank-note">Puan = mesaj sayısı + sesli kanalda geçirilen dakika × 1.5</div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="page" id="page-leaderboard">
+    <div class="section-head"><div><div class="eyebrow">FULL RANKING</div><h2>LEADERBOARD</h2></div><p id="lbNote"></p></div>
+    <section class="panel">
+      <div class="panel-head"><h3>🏆 TÜM SIRALAMA</h3><div class="tabs" id="lbTabs"></div></div>
+      <div class="leader" id="lbRows"></div>
+    </section>
+  </div>
+
+  <!-- SHIP -->
+  <div class="page" id="page-ship">
+    <div class="shiphead">
+      <div class="eyebrow" style="color:#ff9fb2">DISCORD KİMYASI</div>
+      <h2>SHIP <span>♡</span></h2>
+      <p>Günün ship'ine bak ya da istediğin iki kişiyi seçip uyumlarını ölç.</p>
+    </div>
+    <div class="shipwrap">
+      <section class="panel shipcard" id="dailyCard"></section>
+      <section class="panel shipcard">
+        <div class="tag">KENDİN SEÇ</div>
+        <div class="picker" style="margin-top:14px">
+          <select id="selA"></select><span class="mid">♥</span><select id="selB"></select>
+        </div>
+        <div class="actions" style="margin-top:16px"><button class="primary" id="measure">UYUMU ÖLÇ ♡</button></div>
+        <div id="manualOut"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- SHIPGAME -->
+  <div class="page" id="page-shipgame">
+    <div class="shiphead">
+      <div class="eyebrow" style="color:#ff9fb2">RANDOM MATCH</div>
+      <h2>SHIP<span>GAME</span></h2>
+      <p>Kadere bir zar at. Sunucudan iki kişi seçilir, Discord profillerine göre ilişkileri yazılır.</p>
+    </div>
+    <div class="shipwrap">
+      <section class="panel shipcard" id="gameCard">
+        <div class="tag">KADERİN SEÇİMİ</div>
+        <div id="gameOut"></div>
+        <div class="actions"><button class="rollbtn" id="roll">🎲 ŞANSINI DENE</button></div>
+        <div class="history" id="history"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><span>© 2026 MERMİSIKICILAR</span><span>MESAJ İÇERİKLERİ KAYDEDİLMEZ • SADECE SAYILAR TUTULUR</span></footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js" onerror="void 0"></script>
+<script src="data.js" onerror="void 0"></script>
+<script type="module">
+/* ---------- VERİ ---------- */
+const RANKS=[
+  {min:0,name:"Çaylak Mermi",emoji:"🥚"},
+  {min:50,name:"Tetikçi",emoji:"🔫"},
+  {min:200,name:"Nişancı",emoji:"🎯"},
+  {min:600,name:"Keskin Nişancı",emoji:"🦅"},
+  {min:1500,name:"Mermi Kralı",emoji:"👑"},
+  {min:4000,name:"Efsane Mermisıkıcı",emoji:"🌟"}
+];
+async function loadData(){
+  const c=window.MERMI_CONFIG;
+  if(c&&c.SUPABASE_URL&&c.SUPABASE_KEY&&!/BURAYA/.test(c.SUPABASE_URL+c.SUPABASE_KEY)){
+    try{
+      const h={apikey:c.SUPABASE_KEY};
+      if(c.SUPABASE_KEY.startsWith("eyJ"))h.Authorization="Bearer "+c.SUPABASE_KEY;
+      const r=await fetch(c.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/members?select=*&limit=1000",{headers:h});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      const rows=await r.json();
+      const users={};let upd=0;
+      rows.forEach(x=>{
+        users[x.id]={id:String(x.id),name:x.name||"?",avatar:x.avatar||"",joined:x.joined,messages:x.messages||0,
+          voice_seconds:x.voice_seconds||0,night_messages:x.night_messages||0};
+        const t=Date.parse(x.updated_at);if(t>upd)upd=t;
+      });
+      return{guild:"Mermisıkıcılar",updated:upd?new Date(upd).toISOString():null,users,live:true};
+    }catch(e){console.warn("Supabase okunamadı, yedek veriye geçildi:",e)}
+  }
+  return window.MERMI_DATA||null;
+}
+let D=await loadData();
+const isDemo=!D;
+if(isDemo){
+  D={guild:"DEMO",users:{}};
+  ["KeskinNişancı","TetikCanavarı","GeceKuşu","SesliKral","SessizAdam","Çaylak42","MermiMakinesi","KurşunKız"].forEach((n,i)=>{
+    D.users["d"+i]={id:"d"+i,name:n,avatar:"",joined:new Date(Date.now()-(100+i*77)*864e5).toISOString(),
+      messages:Math.floor(Math.random()*2500),voice_seconds:Math.floor(Math.random()*400000),night_messages:Math.floor(Math.random()*600)};
+  });
+}
+const M=Object.values(D.users||{}).map(u=>{
+  u.voice_min=Math.floor((u.voice_seconds||0)/60);
+  u.messages=u.messages||0;u.night_messages=u.night_messages||0;u.voice_seconds=u.voice_seconds||0;
+  u.score=Math.round(u.messages+u.voice_min*1.5);
+  return u;
+});
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rankOf=s=>{let r=RANKS[0];for(const x of RANKS)if(s>=x.min)r=x;return r};
+const fmtV=sec=>{const m=Math.floor(sec/60),h=Math.floor(m/60);return h?`${h}sa ${m%60}dk`:`${m}dk`};
+const fmtN=n=>n>=10000?(n/1000).toFixed(1)+"K":String(n);
+
+/* ---------- ORTAK PARÇALAR ---------- */
+function avatarHTML(u,size){
+  const ini=esc((u.name||"?").trim().slice(0,1).toUpperCase());
+  const st=`width:${size}px;height:${size}px;font-size:${Math.round(size/2.4)}px`;
+  if(u.avatar)return `<span class="avatar" style="${st}"><img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.textContent='${ini}'"></span>`;
+  return `<span class="avatar" style="${st}">${ini}</span>`;
+}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
+
+/* ---------- SIRALAMA ---------- */
+const MODES=[
+  {k:"score",t:"PUAN",val:u=>u.score,disp:u=>fmtN(u.score),unit:"PUAN"},
+  {k:"voice",t:"SES",val:u=>u.voice_seconds,disp:u=>fmtV(u.voice_seconds),unit:"SES SÜRESİ"},
+  {k:"messages",t:"MESAJ",val:u=>u.messages,disp:u=>fmtN(u.messages),unit:"MESAJ"},
+  {k:"night",t:"GECE KUŞU",val:u=>u.night_messages,disp:u=>fmtN(u.night_messages),unit:"GECE MESAJI"}
+];
+function renderRows(el,mode,limit){
+  const list=[...M].sort((a,b)=>mode.val(b)-mode.val(a));
+  if(!list.length){el.innerHTML='<div class="empty">Henüz veri yok. Bot çalışınca burası dolacak.</div>';return}
+  const max=Math.max(1,mode.val(list[0]));
+  el.innerHTML=list.slice(0,limit||list.length).map((u,i)=>{
+    const r=rankOf(u.score),cls=["gold","silver","bronze"][i]||"";
+    return `<div class="leader-row"><div class="rank ${cls}">${String(i+1).padStart(2,"0")}</div>
+      <div class="user">${avatarHTML(u,i<3?42:36)}<div><b>${esc(u.name)}</b><small>${r.emoji} ${esc(r.name)}</small></div></div>
+      <div class="bar"><i style="width:${Math.max(3,Math.round(mode.val(u)/max*100))}%"></i></div>
+      <div class="score">${mode.disp(u)}<small>${mode.unit}</small></div></div>`}).join("");
+}
+function setupBoard(tabsEl,rowsEl,modes,limit){
+  let cur=modes[0];
+  const draw=()=>{
+    tabsEl.innerHTML=modes.map(m=>`<button data-k="${m.k}" class="${m===cur?"active":""}">${m.t}</button>`).join("");
+    tabsEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{cur=modes.find(m=>m.k===b.dataset.k);draw()});
+    renderRows(rowsEl,cur,limit);
+  };
+  draw();
+}
+setupBoard($("homeTabs"),$("homeRows"),MODES.slice(0,3),3);
+setupBoard($("lbTabs"),$("lbRows"),MODES,0);
+
+/* ---------- ANA SAYFA İSTATİSTİK / RANK ---------- */
+(function(){
+  const top=[...M].sort((a,b)=>b.score-a.score)[0];
+  const tm=M.reduce((s,u)=>s+u.messages,0), tv=M.reduce((s,u)=>s+u.voice_seconds,0);
+  $("stats").innerHTML=[
+    ["TOPLAM ÜYE",M.length,"↗ Mermisıkıcı ordusu"],
+    ["TOPLAM MESAJ",fmtN(tm),"↗ Sayılan mesaj"],
+    ["TOPLAM SES SÜRESİ",`${Math.floor(tv/3600)}<span style="font-size:14px"> sa</span>`,"Sunucu geneli"],
+    ["ZİRVEDEKİ",esc(top?top.name:"-"),top?"👑 "+esc(rankOf(top.score).name):"-"]
+  ].map(s=>`<div class="stat"><small>${s[0]}</small><strong>${s[1]}</strong><em>${s[2]}</em></div>`).join("");
+  $("rankList").innerHTML=RANKS.map(r=>`<div class="rank-item"><span class="em">${r.emoji}</span><div><b>${esc(r.name)}</b><small>${r.min}+ puan</small></div></div>`).join("");
+  $("overviewNote").textContent=isDemo?"DEMO VERİSİ • BOT ÇALIŞINCA GERÇEK VERİ GELİR":"BOT VERİSİ • MESAJ İÇERİĞİ KAYDEDİLMEZ";
+  $("lbNote").textContent=M.length+" ÜYE";
+  const pill=$("statusPill");
+  if(isDemo){pill.textContent="◉  DEMO VERİSİ";pill.classList.add("demo")}
+  else pill.textContent="◉  "+(D.updated?"SON GÜNCELLEME "+new Date(D.updated).toLocaleString("tr-TR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}).toUpperCase():"CANLI");
+})();
+
+/* ---------- SHIP MOTORU ---------- */
+function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return Math.abs(h>>>0)}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pairKey=(a,b)=>[a.id,b.id].sort().join("|");
+function shipName(a,b){const x=a.name,y=b.name;return x.slice(0,Math.ceil(x.length/2))+y.slice(Math.floor(y.length/2))}
+function shipCalc(a,b){
+  const rng=mulberry(hash(pairKey(a,b)));
+  const pick=arr=>arr[Math.floor(rng()*arr.length)];
+  let pct=30+hash(pairKey(a,b))%56;
+  const L=[];
+  const nA=a.messages?a.night_messages/a.messages:0,nB=b.messages?b.night_messages/b.messages:0;
+  if(nA>.25&&nB>.25){pct+=8;L.push(pick(["İkiniz de gece kuşusunuz. Sabah 4'te birbirinize yazmayanınız kalmamıştır, kader bu.","Gece 3'te ikiniz de ayaktasınız. Uyku düzeniniz kötü ama ilişki düzeniniz mükemmel."]))}
+  else if(nA>.25||nB>.25){pct-=3;const n=nA>nB?a:b,d=nA>nB?b:a;L.push(pick([`${n.name} gece kuşu, ${d.name} ise uyuyor. Gece mesajlarına sabah cevap gelecek.`,`${n.name} gece yarısı yazıyor, ${d.name} sabah uyanıp "ne olmuş" diyor. Tatlı bir saat farkı.`]))}
+  const vA=a.voice_seconds,vB=b.voice_seconds;
+  if(vA>36000&&vB>36000){pct+=8;L.push(pick(["İkiniz de sesli kanalın müdavimisiniz. Konuşacak o kadar şey var ki dünya biraz bekleyebilir.","Sesli kanalda yan yana yaşıyorsunuz. Mikrofon açıkken aşk daha güzel."]))}
+  else if(Math.max(vA,vB)>36000&&Math.min(vA,vB)<7200){const s=vA>vB?a:b,q=vA>vB?b:a;L.push(`${s.name} sesli kanalda yaşıyor, ${q.name} ise daha çok yazıyor. İletişim biçiminiz farklı ama bu bile tatlı.`)}
+  const mA=a.messages,mB=b.messages;
+  if(Math.max(mA,mB)>3*Math.max(1,Math.min(mA,mB))&&Math.max(mA,mB)>30){const t=mA>mB?a:b,q=mA>mB?b:a;L.push(`${t.name} konuşuyor, ${q.name} dinliyor. Klasik ama çalışan bir ilişki modeli.`)}
+  else if(mA>100&&mB>100){pct+=4;L.push("İkiniz de çok yazıyorsunuz. Konuşmalar bitmiyor, bildirimler susmuyor.")}
+  if(a.joined&&b.joined){
+    const ja=new Date(a.joined),jb=new Date(b.joined),days=Math.round(Math.abs(ja-jb)/864e5);
+    const old=ja<jb?a:b,nw=old===a?b:a;
+    if(days<14){pct+=5;L.push("Sunucuya neredeyse aynı günlerde katılmışsınız. Aynı dönemin çocukları.")}
+    else L.push(`${old.name}, sunucuya ${nw.name}'dan ${days} gün önce katılmış. Tecrübe ve heyecan karşılaşması.`);
+  }
+  const ra=rankOf(a.score),rb=rankOf(b.score);
+  if(ra===rb)L.push(`İkiniz de ${ra.emoji} ${ra.name} rank'indesiniz. Denk güçler, ortak gaz.`);
+  else L.push(`${a.name} ${ra.emoji} ${ra.name}, ${b.name} ${rb.emoji} ${rb.name}. Rank farkı var ama aşk rank tanımaz.`);
+  pct=Math.max(3,Math.min(99,pct));
+  L.push(pct>=85?"Sonuç: Evlilik hazırlıkları başlasın, nikah şahidi Mermi Kralı. 💍":pct>=65?"Sonuç: Güzel gidiyor. Birlikte ranked atın, kavga etmeyin. 💞":pct>=45?"Sonuç: Biraz çalışırsanız olur. Önce ortak bir oyun bulun. 🎮":"Sonuç: Zor ama imkansız değil. En azından iyi arkadaş olursunuz. 🤝");
+  return{pct,lines:L,name:shipName(a,b)};
+}
+function profileHTML(u,size){
+  const r=rankOf(u.score);
+  return `<div class="profile">${avatarHTML(u,size||120)}<b>${esc(u.name)}</b><span class="badge">${r.emoji} ${esc(r.name)}</span><small>💬 ${fmtN(u.messages)} • 🎧 ${fmtV(u.voice_seconds)}</small></div>`;
+}
+function pairHTML(a,b,cls){return `<div class="pairrow ${cls||""}">${profileHTML(a)}<span class="heart bigheart">♥</span>${profileHTML(b)}</div>`}
+function resultHTML(a,b,res,id){
+  return `${pairHTML(a,b)}<div class="bigpct" id="${id}pct">%0</div><div class="meter"><i id="${id}bar"></i></div>
+  <div class="shipname">Ship ismi: ${esc(res.name)}</div><div class="story" id="${id}story"></div>`;
+}
+function reveal(id,res,done){
+  const pctEl=$(id+"pct"),bar=$(id+"bar"),st=$(id+"story");
+  if(!pctEl)return;
+  setTimeout(()=>{bar.style.width=res.pct+"%"},60);
+  const t0=performance.now(),dur=1100;
+  (function step(t){const p=Math.min(1,(t-t0)/dur);pctEl.textContent="%"+Math.round(res.pct*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step)})(t0);
+  st.innerHTML="";
+  res.lines.forEach((l,i)=>setTimeout(()=>{const p=document.createElement("p");p.textContent=l;st.appendChild(p);if(i===res.lines.length-1&&done)done()},350+i*420));
+}
+const need2=()=>M.length<2;
+const NOTENOUGH='<div class="empty">Ship için en az 2 üye lazım. Bot çalışınca sunucudaki herkes burada olacak.</div>';
+
+/* ---------- GÜNÜN SHIP'İ ---------- */
+let dailyPair=null,dailyRes=null;
+(function(){
+  const box=$("daily");
+  if(need2()){box.style.display="none";$("dailyCard").innerHTML='<div class="tag">GÜNÜN SHIP\'İ</div>'+NOTENOUGH;return}
+  const day=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
+  const ids=[...M].sort((a,b)=>a.id<b.id?-1:1);
+  const rng=mulberry(hash("gunun-ship-"+day));
+  const i=Math.floor(rng()*ids.length);let j;do{j=Math.floor(rng()*ids.length)}while(j===i);
+  const a=ids[i],b=ids[j];dailyPair=[a,b];dailyRes=shipCalc(a,b);
+  const dateTxt=new Date().toLocaleDateString("tr-TR",{day:"numeric",month:"long",timeZone:"Europe/Istanbul"}).toUpperCase();
+  box.innerHTML=`<div class="lbl">${dateTxt}<b>GÜNÜN SHIP'İ</b></div>
+    <div class="duo">
+      <div class="who">${avatarHTML(a,48)}<div><b>${esc(a.name)}</b><small>${rankOf(a.score).emoji} ${esc(rankOf(a.score).name)}</small></div></div>
+      <span class="heart">♥</span>
+      <div class="who">${avatarHTML(b,48)}<div><b>${esc(b.name)}</b><small>${rankOf(b.score).emoji} ${esc(rankOf(b.score).name)}</small></div></div>
+      <span class="pct">%${dailyRes.pct}</span>
+    </div>
+    <button class="more" data-go="ship">HİKAYESİ ↗</button>`;
+  $("dailyCard").innerHTML=`<div class="tag">GÜNÜN SHIP'İ • ${dateTxt}</div>`+resultHTML(a,b,dailyRes,"d");
+})();
+
+/* ---------- SHIP (MANUEL) ---------- */
+[$("selA"),$("selB")].forEach(sel=>{sel.innerHTML=M.map((u,i)=>`<option value="${i}">${esc(u.name)}</option>`).join("")});
+if(M.length>1)$("selB").value=1;
+$("measure").onclick=()=>{
+  if(need2()){toast("En az 2 üye lazım");return}
+  const a=M[+$("selA").value],b=M[+$("selB").value];
+  if(a===b){toast("Kendini kendine shipleyemezsin 😄");return}
+  const res=shipCalc(a,b);
+  $("manualOut").innerHTML=resultHTML(a,b,res,"m");
+  reveal("m",res);
+};
+
+/* ---------- SHIPGAME ---------- */
+const hist=[];
+function gameIdle(){
+  $("gameOut").innerHTML=need2()?NOTENOUGH:`<div class="pairrow" style="opacity:.55"><div class="profile"><span class="avatar" style="width:120px;height:120px;font-size:50px">?</span><b>???</b></div><span class="heart bigheart">♥</span><div class="profile"><span class="avatar" style="width:120px;height:120px;font-size:50px">?</span><b>???</b></div></div>`;
+}
+gameIdle();
+let rolling=false;
+$("roll").onclick=()=>{
+  if(rolling||need2()){if(need2())toast("En az 2 üye lazım");return}
+  rolling=true;$("roll").disabled=true;
+  const pickTwo=()=>{const i=Math.floor(Math.random()*M.length);let j;do{j=Math.floor(Math.random()*M.length)}while(j===i);return[M[i],M[j]]};
+  const [fa,fb]=pickTwo();
+  let step=0;const total=16;
+  (function spin(){
+    if(step<total){const [x,y]=pickTwo();$("gameOut").innerHTML=pairHTML(x,y,"spinning");step++;setTimeout(spin,60+step*step*1.6)}
+    else{
+      const res=shipCalc(fa,fb);
+      $("gameOut").innerHTML=resultHTML(fa,fb,res,"g");
+      reveal("g",res,()=>{
+        hist.unshift(`${esc(fa.name)} ♥ ${esc(fb.name)}<b>%${res.pct}</b>`);if(hist.length>6)hist.pop();
+        $("history").innerHTML=hist.map(h=>`<span>${h}</span>`).join("");
+        rolling=false;$("roll").disabled=false;$("roll").textContent="🎲 TEKRAR DENE";
+      });
+    }
+  })();
+};
+
+/* ---------- SAYFA YÖNLENDİRME ---------- */
+const PAGES=["home","leaderboard","ship","shipgame"];
+function go(p,noHash){
+  if(!PAGES.includes(p))p="home";
+  document.body.dataset.page=p;
+  document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===p));
+  if(!noHash)history.replaceState(null,"","#"+p);
+  window.scrollTo({top:0});
+  if(p==="ship"&&dailyRes&&!$("dpct").dataset.done){$("dpct").dataset.done=1;reveal("d",dailyRes)}
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.page));
+document.addEventListener("click",e=>{const t=e.target.closest("[data-go]");if(t)go(t.dataset.go)});
+window.addEventListener("hashchange",()=>go(location.hash.slice(1),true));
+go(location.hash.slice(1)||"home",true);
+// Canlı veri varsa ana sayfa/leaderboard açıkken 5 dakikada bir tazele
+if(D.live)setInterval(()=>{if(!document.hidden&&["home","leaderboard"].includes(document.body.dataset.page))location.reload()},300000);
+</script>
+</body>
+</html>
